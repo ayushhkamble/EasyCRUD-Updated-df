@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  database:
+    image: mariadb:10.11
+    container_name: easycrud-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: student_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: redhat123
+    ports:
+      - "3306:3306"
+    volumes:
+      - easycrud_db_data:/var/lib/mysql
+    networks:
+      - easycrud-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    container_name: easycrud-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://database:3306/student_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: redhat123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - database
+    networks:
+      - easycrud-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+    container_name: easycrud-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - easycrud-network
+
+volumes:
+  easycrud_db_data:
+
+networks:
+  easycrud-network:
+    driver: bridge
